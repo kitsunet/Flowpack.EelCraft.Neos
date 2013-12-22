@@ -1,0 +1,8 @@
+-
+  name:  'Eel Evaluator'
+  uriPattern: 'eelevaluator'
+  defaults:
+    '@package':    'Flowpack.EelCraft.Neos'
+    '@controller': 'Module'
+    '@action':     'index'
+    '@format':     'html'

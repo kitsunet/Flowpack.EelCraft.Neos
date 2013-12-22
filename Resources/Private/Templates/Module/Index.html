@@ -1,0 +1,79 @@
+<f:flashMessages class="flashmessages" />
+
+<style>
+	#eelcraft-eelevaluator .Flow-Error-Debugger-VarDump-Floating {
+		float: none;
+		left: 0;
+		border: 0px none;
+	}
+</style>
+
+<div id="eelcraft-eelevaluator" class="neos-container-fluid">
+	<f:form action="index">
+		<fieldset>
+			<div class="neos-control-group">
+				<label class="neos-control-label">Node Path</label>
+
+				<div class="neos-controls">
+					<f:form.textfield name="node" value="{node.path}" />
+				</div>
+			</div>
+			<div class="neos-control-group">
+				<label class="neos-control-label">EEL Expression</label>
+
+				<div class="neos-controls">
+					<f:form.textfield name="eelExpression" value="{eelExpression}" />
+				</div>
+			</div>
+		</fieldset>
+		<fieldset>
+			<f:form.submit value="Evaluate" class="neos-button neos-button-primary" />
+		</fieldset>
+	</f:form>
+
+	<f:for each="{evaluationData}" as="evaluation">
+		<div class="neos-row-fluid">
+			<legend>{node.path} in context at {evaluation.arguments.typoScriptPath}</legend>
+
+			<h5>Evaluation result:</h5>
+			<br />
+			<f:debug>{evaluation.evaluationResult}</f:debug>
+			<hr />
+			<table class="neos-table">
+				<caption>Context contained</caption>
+				<thead>
+					<tr>
+						<th>ContextVariable</th>
+						<th>Value</th>
+					</tr>
+				</thead>
+				<tbody>
+					<f:for each="{evaluation.context}" key="contextVariableName" as="contextVariable">
+					<tr>
+						<td style="vertical-align: top;">{contextVariableName}</td>
+						<td>
+						<!-- Little Hack here, needs dedicated ViewHelper in the future -->
+						<f:if condition="{contextVariable.path}">
+							<f:then>
+								<strong>Node Of Type: {contextVariable.nodeType.name}</strong>
+								<p>
+									Node Path: {contextVariable.path} <br/>
+									Node Depth: {contextVariable.depth} <br/>
+									Node Properties:
+									<f:for each="{contextVariable.properties}" as="nodeProperty" key="properyName" iteration="propertyIteration">
+										{properyName}{f:if(condition: propertyIteration.isLast, then: '', else: ', ')}
+									</f:for>
+								</p>
+							</f:then>
+							<f:else>
+								<f:debug typeOnly="TRUE">{contextVariable}</f:debug>
+							</f:else>
+						</f:if>
+						</td>
+					</tr>
+					</f:for>
+				</tbody>
+			</table>
+		</div>
+	</f:for>
+</div>

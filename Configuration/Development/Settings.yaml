@@ -1,0 +1,5 @@
+Flowpack:
+  EelCraft:
+    Neos:
+      contextWatcher:
+        enable: TRUE
