@@ -1,4 +1,12 @@
-<f:flashMessages class="flashmessages" />
+<f:flashMessages as="flashMessages">
+	<f:if condition="{flashMessages -> f:count()} > 0">
+		<ul id="neos-notifications-inline">
+			<f:for each="{flashMessages}" as="flashMessage">
+				<li data-type="{flashMessage.severity -> f:format.case(mode: 'lower')}">{flashMessage}</li>
+			</f:for>
+		</ul>
+	</f:if>
+</f:flashMessages>
 
 <style>
 	#eelcraft-eelevaluator .Flow-Error-Debugger-VarDump-Floating {
