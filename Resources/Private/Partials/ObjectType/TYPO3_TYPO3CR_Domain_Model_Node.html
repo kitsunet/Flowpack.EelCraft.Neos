@@ -1,0 +1,20 @@
+<tr>
+	<th>Node Properties</th>
+	<td>
+		<f:for each="{variable.properties}" as="nodeProperty" key="properyName" iteration="propertyIteration">
+			{properyName}{f:if(condition: propertyIteration.isLast, then: '', else: ', ')}
+		</f:for>
+	</td>
+</tr>
+<tr>
+	<th>Type</th>
+	<td>{variable.nodeType.name}</td>
+</tr>
+<tr>
+	<th>Path</th>
+	<td>{variable.path}</td>
+</tr>
+<tr>
+	<th>Depth</th>
+	<td>{variable.depth}</td>
+</tr>

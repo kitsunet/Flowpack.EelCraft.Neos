@@ -1,0 +1,54 @@
+{namespace ec=Flowpack\EelCraft\Neos\ViewHelpers}
+<table class="neos-info-table">
+	<tbody>
+	<tr>
+		<th style="width: auto;">{variableInformation.baseType}</th>
+		<td>
+			<f:if condition="{variableInformation.isScalarValue}">
+				<f:then>
+					{variable}
+				</f:then>
+				<f:else>
+					<f:if condition="{variableInformation.baseType} == 'array'">
+						<f:then>
+							<f:for each="{variable}" key="arrayKey" as="arrayValue">
+								<h2>Key: {arrayKey}</h2>
+								<ec:variableInfo as="arrayElementInformation" variable="{arrayValue}">
+									<f:render partial="VariableInformation" arguments="{variableInformation: arrayElementInformation, variable: arrayValue}" />
+								</ec:variableInfo>
+							</f:for>
+						</f:then>
+						<f:else>
+							<table class="neos-info-table">
+								<tbody>
+									<tr>
+										<th style="width: auto;">Class</th>
+										<td>{variableInformation.className}</td>
+									</tr>
+									<tr>
+										<th style="width: auto;">Gettable Properties</th>
+										<td>
+											<f:for each="{variableInformation.gettableProperties}" as="gettable" iteration="propertyIteration">
+												{gettable}{f:if(condition: propertyIteration.isLast, then: '', else: ', ')}
+											</f:for>
+										</td>
+									</tr>
+
+									<f:if condition="{variableInformation.className} == 'TYPO3\TYPO3CR\Domain\Model\Node'">
+										<f:render partial="ObjectType/{variableInformation.className -> ec:backslashToUnderscore()}" arguments="{_all}" />
+									</f:if>
+
+									<f:if condition="{variableInformation.className} == 'TYPO3\Eel\FlowQuery\FlowQuery'">
+										<f:render partial="ObjectType/{variableInformation.className -> ec:backslashToUnderscore()}" arguments="{_all}" />
+									</f:if>
+								</tbody>
+							</table>
+						</f:else>
+					</f:if>
+				</f:else>
+			</f:if>
+		</td>
+	</tr>
+	</tbody>
+</table>
+

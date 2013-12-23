@@ -1,3 +1,4 @@
+{namespace ec=Flowpack\EelCraft\Neos\ViewHelpers}
 <f:flashMessages as="flashMessages">
 	<f:if condition="{flashMessages -> f:count()} > 0">
 		<ul id="neos-notifications-inline">
@@ -45,10 +46,12 @@
 
 			<h5>Evaluation result:</h5>
 			<br />
-			<f:debug>{evaluation.evaluationResult}</f:debug>
+			<ec:variableInfo variable="{evaluation.evaluationResult}">
+				<f:render partial="VariableInformation" arguments="{variableInformation: variableInformation, variable: evaluation.evaluationResult}" />
+			</ec:variableInfo>
 			<hr />
+			<h5>Context contained</h5>
 			<table class="neos-table">
-				<caption>Context contained</caption>
 				<thead>
 					<tr>
 						<th>ContextVariable</th>
@@ -60,23 +63,9 @@
 					<tr>
 						<td style="vertical-align: top;">{contextVariableName}</td>
 						<td>
-						<!-- Little Hack here, needs dedicated ViewHelper in the future -->
-						<f:if condition="{contextVariable.path}">
-							<f:then>
-								<strong>Node Of Type: {contextVariable.nodeType.name}</strong>
-								<p>
-									Node Path: {contextVariable.path} <br/>
-									Node Depth: {contextVariable.depth} <br/>
-									Node Properties:
-									<f:for each="{contextVariable.properties}" as="nodeProperty" key="properyName" iteration="propertyIteration">
-										{properyName}{f:if(condition: propertyIteration.isLast, then: '', else: ', ')}
-									</f:for>
-								</p>
-							</f:then>
-							<f:else>
-								<f:debug typeOnly="TRUE">{contextVariable}</f:debug>
-							</f:else>
-						</f:if>
+							<ec:variableInfo variable="{contextVariable}">
+								<f:render partial="VariableInformation" arguments="{variableInformation: variableInformation, variable: contextVariable}" />
+							</ec:variableInfo>
 						</td>
 					</tr>
 					</f:for>
