@@ -1,18 +1,18 @@
 {namespace ec=Flowpack\EelCraft\Neos\ViewHelpers}
 <tr>
-	<th>FlowQuery Context Array</th>
+	<th>FlowQuery Result</th>
 	<td>
 		<table class="neos-info-table">
 			<tbody>
-				<f:for each="{variable.context}" key="arrayKey" as="arrayValue">
+				<f:for each="{variable -> ec:flowQuery()}" key="arrayKey" as="arrayValue">
 					<tr>
 						<th>Key: {arrayKey}</th>
+						<td>
+							<ec:variableInfo as="arrayElementInformation" variable="{arrayValue}">
+								<f:render partial="VariableInformation" arguments="{variableInformation: arrayElementInformation, variable: arrayValue}" />
+							</ec:variableInfo>
+						</td>
 					</tr>
-					<td>
-						<ec:variableInfo as="arrayElementInformation" variable="{arrayValue}">
-							<f:render partial="VariableInformation" arguments="{variableInformation: arrayElementInformation, variable: arrayValue}" />
-						</ec:variableInfo>
-					</td>
 				</f:for>
 			</tbody>
 		</table>

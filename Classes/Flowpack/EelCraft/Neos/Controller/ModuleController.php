@@ -6,7 +6,6 @@ namespace Flowpack\EelCraft\Neos\Controller;
  *                                                                        *
  *                                                                        */
 
-use Flowpack\EelCraft\Neos\Aspects\ContextWatcherAspect;
 use TYPO3\Eel\CompilingEvaluator;
 use TYPO3\Eel\ParserException;
 use TYPO3\Flow\Annotations as Flow;
@@ -23,12 +22,6 @@ class ModuleController extends \TYPO3\Flow\Mvc\Controller\ActionController {
 	 * @var CompilingEvaluator
 	 */
 	protected $eelEvaluator;
-
-	/**
-	 * @Flow\Inject
-	 * @var ContextWatcherAspect
-	 */
-	protected $contextWatcher;
 
 	/**
 	 * Retrieved from the TypoScript Runtime
@@ -64,22 +57,25 @@ class ModuleController extends \TYPO3\Flow\Mvc\Controller\ActionController {
 	protected function evaluate($node = NULL, $eelExpression = NULL) {
 		$eelExpression = $this->cleanExpression($eelExpression);
 
-		$this->contextWatcher->setNodePath($node->getPath());
-
 		// This is ugly but that way the contextWatcher can catch when $node is used during rendering.
+		$q = new FlowQuery(array($node));
+		$document = $q->closest('[instanceof TYPO3.Neos:Document]')->get(0);
 		$view = new \TYPO3\Neos\View\TypoScriptView();
-		$this->controllerContext->getRequest()->setFormat('html');
-		$view->setControllerContext($this->controllerContext);
-		$view->assign('value', $node);
-		$view->render();
+		$controllerContextForRendering = $this->createControllerContextForRendering();
+		$view->setControllerContext($controllerContextForRendering);
+		$view->assign('value', $document);
+		$typoScriptService = new \Flowpack\EelCraft\Neos\TypoScript\TypoScriptService();
+		$typoScriptService->nodePath = $node->getPath();
+		ObjectAccess::setProperty($view, 'typoScriptService', $typoScriptService, TRUE);
+		$view->setTypoScriptPath('root');
+		 $view->render();
+
 		$runtime = ObjectAccess::getProperty($view, 'typoScriptRuntime', TRUE);
-		$this->defaultContextVariables = ObjectAccess::getProperty($runtime, 'defaultContextVariables', TRUE);
-
-		$collectedContexts = $this->contextWatcher->getCollectedContexts();
-
+		$collectedContexts = $runtime->getCollectedContexts();
+		krsort($collectedContexts);
 		foreach ($collectedContexts as $key => $contextEnvironment) {
 			try {
-				$result = $this->evaluateEelExpression($eelExpression, $contextEnvironment['context'], $contextEnvironment['arguments']['contextObject']);
+				$result = $this->evaluateEelExpression($eelExpression, $contextEnvironment['context'], (isset($contextEnvironment['arguments']['contextObject']) ? $contextEnvironment['arguments']['contextObject'] : NULL));
 				$collectedContexts[$key]['evaluationResult'] = $result;
 			} catch (ParserException $parserException) {
 				$this->addFlashMessage($parserException->getMessage(), 'Your EEL Expression could not be parsed', Message::SEVERITY_ERROR);
@@ -118,6 +114,7 @@ class ModuleController extends \TYPO3\Flow\Mvc\Controller\ActionController {
 		$context = new \TYPO3\Eel\ProtectedContext($contextVariables);
 		$context->whitelist('q');
 		$value = $this->eelEvaluator->evaluate($expression, $context);
+
 		return $value;
 	}
 
@@ -137,6 +134,27 @@ class ModuleController extends \TYPO3\Flow\Mvc\Controller\ActionController {
 		return trim($expression);
 	}
 
+	/**
+	 * @return \TYPO3\Flow\Mvc\Controller\ControllerContext
+	 */
+	protected function createControllerContextForRendering() {
+		$httpRequest = \TYPO3\Flow\Http\Request::createFromEnvironment();
+
+		/** @var \TYPO3\Flow\Mvc\ActionRequest $request */
+		$request = $httpRequest->createActionRequest();
+		$request->setControllerObjectName('TYPO3\Neos\Controller\Frontend\NodeController');
+		$request->setFormat('html');
+
+		$uriBuilder = new \TYPO3\Flow\Mvc\Routing\UriBuilder();
+		$uriBuilder->setRequest($request);
+
+		return new \TYPO3\Flow\Mvc\Controller\ControllerContext(
+			$request,
+			new \TYPO3\Flow\Http\Response(),
+			new \TYPO3\Flow\Mvc\Controller\Arguments(array()),
+			$uriBuilder
+		);
+	}
 }
 
 ?>

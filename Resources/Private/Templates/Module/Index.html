@@ -24,14 +24,14 @@
 				<label class="neos-control-label">Node Path</label>
 
 				<div class="neos-controls">
-					<f:form.textfield name="node" value="{node.path}" />
+					<f:form.textfield name="node" value="{node.path}" style="width: 100%" />
 				</div>
 			</div>
 			<div class="neos-control-group">
 				<label class="neos-control-label">EEL Expression</label>
 
 				<div class="neos-controls">
-					<f:form.textfield name="eelExpression" value="{eelExpression}" />
+					<f:form.textfield name="eelExpression" value="{eelExpression}" style="width: 100%" />
 				</div>
 			</div>
 		</fieldset>
@@ -40,16 +40,33 @@
 		</fieldset>
 	</f:form>
 
-	<f:for each="{evaluationData}" as="evaluation">
+	<f:for each="{evaluationData}" as="evaluation" iteration="evaluationIteration">
 		<div class="neos-row-fluid">
-			<legend>{node.path} in context at {evaluation.arguments.typoScriptPath}</legend>
+			<legend>Result {evaluationIteration.cycle}</legend>
+			<p>
+				<strong>{node.path} <br />
+					rendered at TypoScript path: <br />
+					{evaluation.arguments.typoScriptPath}
+				</strong>
+			</p>
 
-			<h5>Evaluation result:</h5>
-			<br />
-			<ec:variableInfo variable="{evaluation.evaluationResult}">
-				<f:render partial="VariableInformation" arguments="{variableInformation: variableInformation, variable: evaluation.evaluationResult}" />
-			</ec:variableInfo>
-			<hr />
+			<table class="neos-table">
+				<thead>
+					<tr>
+						<th>Your Expression applied here results in:</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>
+							<ec:variableInfo variable="{evaluation.evaluationResult}">
+								<f:render partial="VariableInformation" arguments="{variableInformation: variableInformation, variable: evaluation.evaluationResult}" />
+							</ec:variableInfo>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+
 			<h5>Context contained</h5>
 			<table class="neos-table">
 				<thead>
@@ -71,6 +88,8 @@
 					</f:for>
 				</tbody>
 			</table>
+			<hr />
+
 		</div>
 	</f:for>
 </div>
