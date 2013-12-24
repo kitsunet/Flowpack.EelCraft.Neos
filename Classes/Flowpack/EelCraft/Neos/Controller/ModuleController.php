@@ -12,7 +12,6 @@ use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Error\Message;
 use TYPO3\Flow\Reflection\ObjectAccess;
 use TYPO3\TYPO3CR\Domain\Model\NodeInterface;
-use TYPO3\TypoScript\TypoScriptObjects\AbstractTypoScriptObject;
 use TYPO3\Eel\FlowQuery\FlowQuery;
 
 class ModuleController extends \TYPO3\Flow\Mvc\Controller\ActionController {
@@ -30,34 +29,80 @@ class ModuleController extends \TYPO3\Flow\Mvc\Controller\ActionController {
 	protected $defaultContextVariables = array();
 
 	/**
+	 * @Flow\Inject
+	 * @var \Flowpack\EelCraft\Neos\TypoScript\SavedRenderingContext
+	 */
+	protected $savedRenderingContext;
+
+	/**
 	 * Index of module
 	 *
 	 * @param NodeInterface $node
-	 * @param string $eelExpression
 	 * @return void
 	 */
-	public function indexAction($node = NULL, $eelExpression = NULL) {
-		$this->view->assignMultiple(array(
-			'node' => $node,
-			'eelExpression' => $eelExpression
-		));
+	public function indexAction($node = NULL) {
+		$this->view->assign('node', $node);
 
-		if ($node !== NULL && $eelExpression !== NULL) {
-			$this->view->assign('evaluationData', $this->evaluate($node, $eelExpression));
+		if($node !== NULL) {
+			$possibleContexts = $this->renderAndFindContext($node);
+			ksort($possibleContexts);
+			$this->view->assign('possibleContexts', $possibleContexts);
 		}
 	}
 
 	/**
-	 * Get all registered node types
-	 *
-	 * @param NodeInterface $node
 	 * @param string $eelExpression
+	 */
+	public function evaluateExpressionsAction($eelExpression = NULL) {
+		$this->view->assign('eelExpression', $eelExpression);
+
+		if (!$this->savedRenderingContext->isInitialized()) {
+			$this->addFlashMessage('You cannot evaluate Expressions without selecting a context', '', Message::SEVERITY_NOTICE);
+			$this->redirect('index');
+		}
+
+		$this->view->assign('selectedContext', array(
+			'typoScriptPath' => $this->savedRenderingContext->getTypoScriptPath(),
+			'context' => $this->savedRenderingContext->getContext()
+		));
+
+		if ($eelExpression !== NULL) {
+			$eelExpression = $this->cleanExpression($eelExpression);
+			$evaluationResult = $this->evaluateEelExpression($eelExpression, $this->savedRenderingContext->getContext());
+			$this->view->assign('evaluationResult', $evaluationResult);
+		}
+	}
+
+	/**
+	 *
+	 */
+	public function clearContextAction() {
+		$this->savedRenderingContext->clear();
+		$this->forward('index');
+	}
+
+	/**
+	 * @param NodeInterface $node
+	 * @param string $typoScriptPath
+	 */
+	public function lockContextAction($node, $typoScriptPath) {
+		$foundContexts = $this->renderAndFindContext($node);
+
+		if (!isset($foundContexts[$typoScriptPath])) {
+			$this->addFlashMessage('The selected TypoScriptPath to get a Context is not available!', '', Message::SEVERITY_ERROR);
+		} else {
+			$this->savedRenderingContext->setTypoScriptPathAndContext($typoScriptPath, $foundContexts[$typoScriptPath]);
+		}
+
+		$this->forward('evaluateExpressions');
+	}
+
+	/**
+	 * @param NodeInterface $node
 	 * @return array
 	 */
-	protected function evaluate($node = NULL, $eelExpression = NULL) {
-		$eelExpression = $this->cleanExpression($eelExpression);
-
-		// This is ugly but that way the contextWatcher can catch when $node is used during rendering.
+	protected function renderAndFindContext($node) {
+		// This is ugly but that way the ContextCollectingRuntime can catch when $node is used during rendering.
 		$q = new FlowQuery(array($node));
 		$document = $q->closest('[instanceof TYPO3.Neos:Document]')->get(0);
 		$view = new \TYPO3\Neos\View\TypoScriptView();
@@ -68,37 +113,20 @@ class ModuleController extends \TYPO3\Flow\Mvc\Controller\ActionController {
 		$typoScriptService->nodePath = $node->getPath();
 		ObjectAccess::setProperty($view, 'typoScriptService', $typoScriptService, TRUE);
 		$view->setTypoScriptPath('root');
-		 $view->render();
+		$view->render();
 
 		$runtime = ObjectAccess::getProperty($view, 'typoScriptRuntime', TRUE);
-		$collectedContexts = $runtime->getCollectedContexts();
-		krsort($collectedContexts);
-		foreach ($collectedContexts as $key => $contextEnvironment) {
-			try {
-				$result = $this->evaluateEelExpression($eelExpression, $contextEnvironment['context'], (isset($contextEnvironment['arguments']['contextObject']) ? $contextEnvironment['arguments']['contextObject'] : NULL));
-				$collectedContexts[$key]['evaluationResult'] = $result;
-			} catch (ParserException $parserException) {
-				$this->addFlashMessage($parserException->getMessage(), 'Your EEL Expression could not be parsed', Message::SEVERITY_ERROR);
-				return array();
-			} catch (\Exception $exception) {
-				$this->addFlashMessage($exception->getMessage(), 'Your EEL Expression could not be evaluated.', Message::SEVERITY_WARNING);
-				return array();
-			}
-		}
-
-		return $collectedContexts;
+		return $runtime->getCollectedContexts();
 	}
-
 
 	/**
 	 * Evaluate an Eel expression
 	 *
 	 * @param string $expression The Eel expression to evaluate
 	 * @param array $currentContext
-	 * @param AbstractTypoScriptObject $contextObject An optional object for the "this" value inside the context
 	 * @return mixed The result of the evaluated Eel expression
 	 */
-	protected function evaluateEelExpression($expression, $currentContext, AbstractTypoScriptObject $contextObject = NULL) {
+	protected function evaluateEelExpression($expression, $currentContext) {
 		$contextVariables = array_merge($this->defaultContextVariables, $currentContext);
 
 		$contextVariables['q'] = function ($element) {
@@ -109,11 +137,18 @@ class ModuleController extends \TYPO3\Flow\Mvc\Controller\ActionController {
 			}
 		};
 
-		$contextVariables['this'] = $contextObject;
-
 		$context = new \TYPO3\Eel\ProtectedContext($contextVariables);
 		$context->whitelist('q');
-		$value = $this->eelEvaluator->evaluate($expression, $context);
+		try {
+			$value = $this->eelEvaluator->evaluate($expression, $context);
+		} catch (ParserException $parserException) {
+			$this->addFlashMessage($parserException->getMessage(), 'Your EEL Expression could not be parsed', Message::SEVERITY_ERROR);
+			$value = NULL;
+		} catch (\Exception $exception) {
+			$this->addFlashMessage($exception->getMessage(), 'Your EEL Expression could not be evaluated.', Message::SEVERITY_WARNING);
+			$value = NULL;
+		}
+
 
 		return $value;
 	}
@@ -156,5 +191,3 @@ class ModuleController extends \TYPO3\Flow\Mvc\Controller\ActionController {
 		);
 	}
 }
-
-?>

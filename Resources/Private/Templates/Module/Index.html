@@ -9,87 +9,76 @@
 	</f:if>
 </f:flashMessages>
 
-<style>
-	#eelcraft-eelevaluator .Flow-Error-Debugger-VarDump-Floating {
-		float: none;
-		left: 0;
-		border: 0px none;
-	}
-</style>
-
 <div id="eelcraft-eelevaluator" class="neos-container-fluid">
 	<f:form action="index">
 		<fieldset>
 			<div class="neos-control-group">
 				<label class="neos-control-label">Node Path</label>
-
 				<div class="neos-controls">
 					<f:form.textfield name="node" value="{node.path}" style="width: 100%" />
 				</div>
 			</div>
-			<div class="neos-control-group">
-				<label class="neos-control-label">EEL Expression</label>
-
-				<div class="neos-controls">
-					<f:form.textfield name="eelExpression" value="{eelExpression}" style="width: 100%" />
-				</div>
-			</div>
 		</fieldset>
 		<fieldset>
-			<f:form.submit value="Evaluate" class="neos-button neos-button-primary" />
+			<f:form.submit value="Find Contexts" class="neos-button neos-button-primary" />
 		</fieldset>
 	</f:form>
 
-	<f:for each="{evaluationData}" as="evaluation" iteration="evaluationIteration">
-		<div class="neos-row-fluid">
-			<legend>Result {evaluationIteration.cycle}</legend>
-			<p>
-				<strong>{node.path} <br />
-					rendered at TypoScript path: <br />
-					{evaluation.arguments.typoScriptPath}
-				</strong>
-			</p>
 
-			<table class="neos-table">
-				<thead>
-					<tr>
-						<th>Your Expression applied here results in:</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td>
-							<ec:variableInfo variable="{evaluation.evaluationResult}">
-								<f:render partial="VariableInformation" arguments="{variableInformation: variableInformation, variable: evaluation.evaluationResult}" />
-							</ec:variableInfo>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-
-			<h5>Context contained</h5>
-			<table class="neos-table">
-				<thead>
+	<f:if condition="{node}">
+		<f:form action="lockContext">
+			<f:form.hidden name="node" value="{node.path}" />
+			<legend>Select Context to evaluate EEL Expressions with:</legend>
+			<fieldset>
+				<table class="neos-table">
+					<thead>
 					<tr>
 						<th>ContextVariable</th>
 						<th>Value</th>
 					</tr>
-				</thead>
-				<tbody>
-					<f:for each="{evaluation.context}" key="contextVariableName" as="contextVariable">
-					<tr>
-						<td style="vertical-align: top;">{contextVariableName}</td>
-						<td>
-							<ec:variableInfo variable="{contextVariable}">
-								<f:render partial="VariableInformation" arguments="{variableInformation: variableInformation, variable: contextVariable}" />
-							</ec:variableInfo>
-						</td>
-					</tr>
+					</thead>
+					<tbody>
+					<f:for each="{possibleContexts}" key="contextTypoScriptPath" as="context">
+						<tr class="neos-folder">
+							<td class="check" colspan="2">
+								<label class="neos-radio neos-inline">
+									<f:form.radio name="typoScriptPath" value="{contextTypoScriptPath}" />
+									<span></span>
+									{contextTypoScriptPath -> ec:shorten()}
+								</label>
+							</td>
+							<td class="neos-priority1 neos-aRight">
+								 <i class="fold-toggle icon-chevron-up icon-white" data-toggle="fold-{contextTypoScriptPath -> ec:md5()}"></i>
+							</td>
+						</tr>
+						<f:for each="{context}" key="contextVariableName" as="contextVariable">
+							<tr class="fold-{contextTypoScriptPath -> ec:md5()}" style="display: none;">
+								<td style="vertical-align: top;">{contextVariableName}</td>
+								<td>
+									<ec:variableInfo variable="{contextVariable}">
+										<f:render partial="VariableInformation" arguments="{variableInformation: variableInformation, variable: contextVariable}" />
+									</ec:variableInfo>
+								</td>
+								<td></td>
+							</tr>
+						</f:for>
 					</f:for>
-				</tbody>
-			</table>
-			<hr />
-
-		</div>
-	</f:for>
+					</tbody>
+				</table>
+			</fieldset>
+			<fieldset>
+				<f:form.submit value="Select Context" class="neos-button neos-button-success" />
+			</fieldset>
+		</f:form>
+	</f:if>
 </div>
+
+
+<script>
+	(function ($) {
+		$('.fold-toggle').click(function () {
+			$(this).toggleClass('icon-chevron-down icon-chevron-up');
+			$('tr.' + $(this).data('toggle')).toggle();
+		});
+	})(jQuery);
+</script>

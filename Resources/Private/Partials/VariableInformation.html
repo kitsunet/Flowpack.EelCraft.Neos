@@ -1,5 +1,5 @@
 {namespace ec=Flowpack\EelCraft\Neos\ViewHelpers}
-<table class="neos-info-table">
+<table class="neos-info-table" style="margin-bottom: 0;">
 	<tbody>
 	<tr>
 		<th style="width: auto;">{variableInformation.baseType}</th>
@@ -19,7 +19,7 @@
 							</f:for>
 						</f:then>
 						<f:else>
-							<table class="neos-info-table">
+							<table class="neos-info-table" style="margin-bottom: 0;">
 								<tbody>
 									<tr>
 										<th style="width: auto;">Class</th>
@@ -29,7 +29,7 @@
 										<th style="width: auto;">Gettable Properties</th>
 										<td>
 											<f:for each="{variableInformation.gettableProperties}" as="gettable" iteration="propertyIteration">
-												{gettable}{f:if(condition: propertyIteration.isLast, then: '', else: ', ')}
+												<span class="neos-badge neos-badge-success">{gettable}</span>
 											</f:for>
 										</td>
 									</tr>

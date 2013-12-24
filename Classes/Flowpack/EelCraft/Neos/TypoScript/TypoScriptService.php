@@ -26,11 +26,11 @@ class TypoScriptService extends \TYPO3\Neos\Domain\Service\TypoScriptService {
 	/**
 	 * @param \TYPO3\TYPO3CR\Domain\Model\NodeInterface $currentSiteNode
 	 * @param \TYPO3\Flow\Mvc\Controller\ControllerContext $controllerContext
-	 * @return DummyRuntime|\TYPO3\TypoScript\Core\Runtime
+	 * @return ContextCollectingRuntime
 	 */
 	public function createRuntime(\TYPO3\TYPO3CR\Domain\Model\NodeInterface $currentSiteNode, \TYPO3\Flow\Mvc\Controller\ControllerContext $controllerContext) {
 		$typoScriptObjectTree = $this->getMergedTypoScriptObjectTree($currentSiteNode);
-		$typoScriptRuntime = new DummyRuntime($typoScriptObjectTree, $controllerContext);
+		$typoScriptRuntime = new ContextCollectingRuntime($typoScriptObjectTree, $controllerContext);
 		$typoScriptRuntime->setNodePath($this->nodePath);
 		return $typoScriptRuntime;
 	}

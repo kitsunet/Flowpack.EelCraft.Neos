@@ -3,7 +3,7 @@ Flowpack:
     Neos:
       contextWatcher:
         enable: FALSE
-        limit: 1
+        limit: 10
 
 TYPO3:
   Neos:

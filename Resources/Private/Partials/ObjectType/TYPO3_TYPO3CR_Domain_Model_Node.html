@@ -2,7 +2,7 @@
 	<th>Node Properties</th>
 	<td>
 		<f:for each="{variable.properties}" as="nodeProperty" key="properyName" iteration="propertyIteration">
-			{properyName}{f:if(condition: propertyIteration.isLast, then: '', else: ', ')}
+			<span class="neos-badge neos-badge-success">{properyName}</span>
 		</f:for>
 	</td>
 </tr>

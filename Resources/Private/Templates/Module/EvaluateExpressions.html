@@ -1,0 +1,92 @@
+{namespace ec=Flowpack\EelCraft\Neos\ViewHelpers}
+<f:flashMessages as="flashMessages">
+	<f:if condition="{flashMessages -> f:count()} > 0">
+		<ul id="neos-notifications-inline">
+			<f:for each="{flashMessages}" as="flashMessage">
+				<li data-type="{flashMessage.severity -> f:format.case(mode: 'lower')}">{flashMessage}</li>
+			</f:for>
+		</ul>
+	</f:if>
+</f:flashMessages>
+<div class="neos-row-fluid">
+	<f:form action="evaluateExpressions">
+		<fieldset>
+			<div class="neos-control-group">
+				<label class="neos-control-label">EEL Expression</label>
+
+				<div class="neos-controls" style="position: relative;">
+					<f:form.textfield name="eelExpression" value="{eelExpression}" style="width: 100%; padding-right: 15%;" />
+					<button class="neos-button neos-button-primary" title="Evaluate" style="position: absolute; right: 0; top: 0;">
+						Evaluate <i class="icon-play icon-white"></i>
+					</button>
+				</div>
+			</div>
+		</fieldset>
+	</f:form>
+</div>
+
+<f:if condition="{eelExpression}">
+	<div class="neos-row-fluid">
+		<table class="neos-table">
+			<thead>
+			<tr>
+				<th>Your Expression applied on selected Context results in:</th>
+			</tr>
+			</thead>
+			<tbody>
+			<tr>
+				<td>
+					<ec:variableInfo variable="{selectedContextResult}">
+						<f:render partial="VariableInformation" arguments="{variableInformation: variableInformation, variable: evaluationResult}" />
+					</ec:variableInfo>
+				</td>
+			</tr>
+			</tbody>
+		</table>
+
+	</div>
+</f:if>
+
+<div class="neos-row-fluid">
+	<table class="neos-table">
+		<legend>
+			Selected Context
+			<f:link.action action="clearContext" class="neos-button neos-button-warning" style="float: right;" title="Click to clear selected Context.">
+				Clear Context
+			</f:link.action>
+		</legend>
+		<thead>
+		<tr>
+			<th>ContextVariable</th>
+			<th>Value</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr class="neos-folder">
+			<td class="neos-priority1 neos-aRight" colspan="2">
+				{selectedContext.typoScriptPath}
+				<i class="fold-toggle icon-chevron-up icon-white" data-toggle="fold-savedContext"></i>
+			</td>
+		</tr>
+		<f:for each="{selectedContext.context}" key="contextVariableName" as="contextVariable">
+			<tr class="fold-savedContext">
+				<td style="vertical-align: top;">{contextVariableName}</td>
+				<td>
+					<ec:variableInfo variable="{contextVariable}">
+						<f:render partial="VariableInformation" arguments="{variableInformation: variableInformation, variable: contextVariable}" />
+					</ec:variableInfo>
+				</td>
+			</tr>
+		</f:for>
+		</tbody>
+	</table>
+</div>
+
+<script>
+	(function ($) {
+		$('.fold-toggle').click(function () {
+			$(this).toggleClass('icon-chevron-down icon-chevron-up');
+			$('tr.' + $(this).data('toggle')).toggle();
+		});
+	})(jQuery);
+</script>

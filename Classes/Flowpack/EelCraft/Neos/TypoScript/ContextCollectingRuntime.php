@@ -17,7 +17,7 @@ use TYPO3\TypoScript\Exception as Exceptions;
 use TYPO3\TypoScript\Exception;
 
 
-class DummyRuntime extends \TYPO3\TypoScript\Core\Runtime {
+class ContextCollectingRuntime extends \TYPO3\TypoScript\Core\Runtime {
 
 	/**
 	 * @var \TYPO3\Flow\Configuration\ConfigurationManager
@@ -134,13 +134,7 @@ class DummyRuntime extends \TYPO3\TypoScript\Core\Runtime {
 					if ($contextObject !== NULL) {
 						$currentContext['this'] = $contextObject;
 					}
-					$this->collectedContexts[$typoScriptPath] = array(
-						'arguments' => array(
-							'typoScriptPath' => preg_replace('/<[^<>]*>/', '', $typoScriptPath),
-							'contextObject' => $contextObject
-						),
-						'context' => $currentContext
-					);
+					$this->collectedContexts[preg_replace('/<[^<>]*>/', '', $typoScriptPath)] = $currentContext;
 				}
 			}
 		}

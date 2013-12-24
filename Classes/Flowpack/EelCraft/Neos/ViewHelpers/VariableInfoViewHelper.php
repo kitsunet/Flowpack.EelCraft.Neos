@@ -70,6 +70,8 @@ class VariableInfoViewHelper extends \TYPO3\Fluid\Core\ViewHelper\AbstractViewHe
 			return 'float';
 		} elseif (is_array($value)) {
 			return 'array';
+		} elseif (is_null($value)) {
+			return 'null';
 		}
 	}
 }
