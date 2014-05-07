@@ -26,13 +26,19 @@ class ModuleController extends \TYPO3\Flow\Mvc\Controller\ActionController {
 	 * Retrieved from the TypoScript Runtime
 	 * @var array
 	 */
-	protected $defaultContextVariables = array();
+	protected $defaultContextVariables;
 
 	/**
 	 * @Flow\Inject
 	 * @var \Flowpack\EelCraft\Neos\TypoScript\SavedRenderingContext
 	 */
 	protected $savedRenderingContext;
+
+	/**
+	 * @Flow\Inject
+	 * @var \TYPO3\Flow\Configuration\ConfigurationManager
+	 */
+	protected $configurationManager;
 
 	/**
 	 * Index of module
@@ -127,7 +133,7 @@ class ModuleController extends \TYPO3\Flow\Mvc\Controller\ActionController {
 	 * @return mixed The result of the evaluated Eel expression
 	 */
 	protected function evaluateEelExpression($expression, $currentContext) {
-		$contextVariables = array_merge($this->defaultContextVariables, $currentContext);
+		$contextVariables = array_merge($this->getDefaultContextVariables(), $currentContext);
 
 		$contextVariables['q'] = function ($element) {
 			if (is_array($element) || $element instanceof \Traversable) {
@@ -190,4 +196,38 @@ class ModuleController extends \TYPO3\Flow\Mvc\Controller\ActionController {
 			$uriBuilder
 		);
 	}
+
+	/**
+	 * @param array $defaultContextVariables
+	 */
+	public function setDefaultContextVariables($defaultContextVariables) {
+		$this->defaultContextVariables = $defaultContextVariables;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getDefaultContextVariables() {
+		if ($this->defaultContextVariables === NULL) {
+			$this->defaultContextVariables = array();
+			$settings = $this->configurationManager->getConfiguration('Settings', 'TYPO3.TypoScript');
+
+			if (isset($settings['defaultContext']) && is_array($settings['defaultContext'])) {
+				foreach ($settings['defaultContext'] as $variableName => $objectType) {
+					$currentPathBase = & $this->defaultContextVariables;
+					$variablePathNames = explode('.', $variableName);
+					foreach ($variablePathNames as $pathName) {
+						if (!isset($currentPathBase[$pathName])) {
+							$currentPathBase[$pathName] = array();
+						}
+						$currentPathBase = & $currentPathBase[$pathName];
+					}
+					$currentPathBase = new $objectType();
+				}
+			}
+		}
+		return $this->defaultContextVariables;
+	}
+
+
 }
