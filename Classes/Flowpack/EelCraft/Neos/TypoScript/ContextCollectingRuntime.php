@@ -43,6 +43,17 @@ class ContextCollectingRuntime extends \TYPO3\TypoScript\Core\Runtime {
 	protected $collectionSettings;
 
 	/**
+	 * If the current TypoScript path ends like this we won't store the context
+	 *
+	 * @var array
+	 */
+	protected $excludedPathEndpoints = array(
+		'<TYPO3.TypoScript:Matcher>',
+		'<TYPO3.TypoScript:Matcher>/condition',
+		'<TYPO3.TypoScript:Tag>'
+	);
+
+	/**
 	 * @param string $nodePath
 	 */
 	public function setNodePath($nodePath) {
@@ -126,15 +137,28 @@ class ContextCollectingRuntime extends \TYPO3\TypoScript\Core\Runtime {
 	 * @param $contextObject
 	 */
 	protected function collectContext($typoScriptPath, $contextObject = NULL) {
+		// exclude a view TypoScript objects for now to reduce hits
+		foreach ($this->excludedPathEndpoints as $excludedPathEndpoint) {
+			if (strpos(strrev($typoScriptPath), strrev($excludedPathEndpoint)) === 0) {
+				return;
+			}
+		}
+
 		if ($this->nodePath !== NULL && strpos($typoScriptPath, '_meta') === FALSE) {
 			$currentContext = $this->getCurrentContext();
-			if (isset($currentContext['node']) && ($currentContext['node'] instanceof NodeInterface) && (count($this->collectedContexts) < $this->collectionSettings['limit'])) {
+			if (isset($currentContext['node']) && ($currentContext['node'] instanceof NodeInterface)) {
 				$node = $currentContext['node'];
 				if ($node->getPath() === $this->nodePath) {
-					if ($contextObject !== NULL) {
-						$currentContext['this'] = $contextObject;
+					$configuration = $this->getConfigurationForPath($typoScriptPath);
+					if (isset($configuration['__meta']['class'])) {
+						if ($contextObject !== NULL) {
+							$currentContext['this'] = $contextObject;
+						}
+						if (count($this->collectedContexts) >= $this->collectionSettings['limit']) {
+							array_shift($this->collectedContexts);
+						}
+						$this->collectedContexts[preg_replace('#<[^<>]*>/#', '/', $typoScriptPath)] = $currentContext;
 					}
-					$this->collectedContexts[preg_replace('/<[^<>]*>/', '', $typoScriptPath)] = $currentContext;
 				}
 			}
 		}

@@ -20,12 +20,6 @@ use TYPO3\Flow\Annotations as Flow;
 class VariableInfoViewHelper extends \TYPO3\Fluid\Core\ViewHelper\AbstractViewHelper {
 
 	/**
-	 * @Flow\Inject
-	 * @var \TYPO3\Flow\Reflection\ReflectionService;
-	 */
-	protected $reflectionService;
-
-	/**
 	 * @var boolean
 	 */
 	protected $escapingInterceptorEnabled = FALSE;
@@ -36,6 +30,8 @@ class VariableInfoViewHelper extends \TYPO3\Fluid\Core\ViewHelper\AbstractViewHe
 	 * @return mixed
 	 */
 	public function render($variable, $as = 'variableInformation') {
+		$reflectionService = $this->objectManager->get('TYPO3\Flow\Reflection\ReflectionService');
+
 		$variableInformation = array(
 			'isScalarValue' => FALSE
 		);
@@ -47,7 +43,7 @@ class VariableInfoViewHelper extends \TYPO3\Fluid\Core\ViewHelper\AbstractViewHe
 
 		if ($variableInformation['baseType'] === 'object') {
 			$variableInformation['gettableProperties'] = \TYPO3\Flow\Reflection\ObjectAccess::getGettablePropertyNames($variable);
-			$variableInformation['className'] = $this->reflectionService->getClassNameByObject($variable);
+			$variableInformation['className'] = $reflectionService->getClassNameByObject($variable);
 		}
 
 		$this->templateVariableContainer->add($as, $variableInformation);
