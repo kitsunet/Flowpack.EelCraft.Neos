@@ -2,12 +2,17 @@
     "name": "flowpack/eelcraft-neos",
     "type": "typo3-flow-package",
     "description": "A UI to work with EEL Expressions in Neos.",
-	"require": {
-		"typo3/neos": "~1.0"
-	},
+    "require": {
+        "typo3/neos": "~1.0"
+    },
     "autoload": {
         "psr-0": {
             "Flowpack\\EelCraft\\Neos": "Classes"
         }
+    },
+    "extra": {
+        "applied-flow-migrations": [
+            "TYPO3.FLOW3-201201261636"
+        ]
     }
 }
