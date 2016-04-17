@@ -1,10 +1,10 @@
+
 Flowpack:
   EelCraft:
     Neos:
       contextWatcher:
-        enable: FALSE
+        enable: false
         limit: 20
-
 TYPO3:
   Neos:
     modules:
@@ -12,7 +12,7 @@ TYPO3:
         submodules:
           eelEvaluator:
             label: 'EEL Evaluator'
-            controller: '\Flowpack\EelCraft\Neos\Controller\ModuleController'
+            controller: \Flowpack\EelCraft\Neos\Controller\ModuleController
             description: 'Evaluate EEL expressions and explore results.'
-            icon: 'icon-cogs'
-            resource: 'Flowpack_EelCraft_Neos_Controller_Module'
+            icon: icon-cogs
+            privilegeTarget: Flowpack_EelCraft_Neos_Controller_Module
