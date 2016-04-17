@@ -2,11 +2,13 @@
 # Security policy for the Flowpack EelCraft Neos package                 #
 #                                                                        #
 
-resources:
-  methods:
-    Flowpack_EelCraft_Neos_Controller_Module: 'method(Flowpack\EelCraft\Neos\Controller\ModuleController->.*Action())'
-
-acls:
+privilegeTargets:
+  TYPO3\Flow\Security\Authorization\Privilege\Method\MethodPrivilege:
+    Flowpack_EelCraft_Neos_Controller_Module:
+      matcher: 'method(Flowpack\EelCraft\Neos\Controller\ModuleController->.*Action())'
+roles:
   'TYPO3.Neos:Administrator':
-    methods:
-      Flowpack_EelCraft_Neos_Controller_Module: GRANT
+    privileges:
+      -
+        privilegeTarget: Flowpack_EelCraft_Neos_Controller_Module
+        permission: GRANT
